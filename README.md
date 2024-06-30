@@ -6,6 +6,10 @@ Main contributors: Marcello Passaro, Fabrice Ardhuin and Marine De Carlo
 At present this tools package focuses on LRM (Delay-Only) altimetry. It was used for the following papers: 
 http://dx.doi.org/10.13140/RG.2.2.32296.17925
 
+This package aims at unifiying the original WHALES code developed by M. Passaro with the altimeter simple simulations and retracking tools developed by F. Ardhuin for the analysis of wave group effects. 
+
+
+
 
 
 ## Installation 
