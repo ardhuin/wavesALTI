@@ -43,7 +43,8 @@ python python_WHALES_launcher.py -m saral -i /home/ardhuin/PUBLI/2023_groups/DAT
 
 
 ## Various notebooks 
-Figure2_retracking_CFOSAT.ipynb     : this generates the plots of Figure 2 and D1 in De Carlo & Ardhuin (2024), with the retracking of some SWIM waveforms
+Figure2_retracking_CFOSAT.ipynb     : this generates the plots of Figure 2 and D1 in De Carlo & Ardhuin (2024), with the retracking of some SWIM waveforms. Note that the waveforms are not yet in the SEANOE dataset. 
+                                      they have been temporarily copied here : https://drive.google.com/drive/folders/1WJP3f12bhUCJh2ZBqo7IohECufIKz_ev?usp=sharing 
 
 Figure5_perturbed_waveforms.ipynb   : generates Figure 5 of De Carlo & Ardhuin (2024), showing waveforms with wave group perturbations
 
