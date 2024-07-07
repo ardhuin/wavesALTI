@@ -3,7 +3,12 @@ Forward (surface simulation, radar waveform simulation) and inverse modelling (w
 
 Main contributors: Marcello Passaro, Fabrice Ardhuin and Marine De Carlo
 
+The WHALES algorithm is defined here: 
+Passaro, M., & Algorithm Development Team. (2021). Algorithm theoretical basis document (atbd), sea state climate change initiative (Tech. Rep.). European Space Agency. Retrieved from https://climate.esa.int/media/documents/Sea_State_cci_ATBD_v3.0-signed.pdf
+
 At present this tools package focuses on LRM (Delay-Only) altimetry. It was used for the following papers: 
+
+https://doi.org/10.1038/s41467-021-23982-4 Global coastal attenuation of wind-waves observed with radar altimetry.
 
 https://doi.org/10.1029/2023JC019740   Wave groups and small scale variability of wave heights observed by altimeters
 
