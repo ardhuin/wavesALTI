@@ -4,13 +4,35 @@ Forward (surface simulation, radar waveform simulation) and inverse modelling (w
 Main contributors: Marcello Passaro, Fabrice Ardhuin and Marine De Carlo
 
 At present this tools package focuses on LRM (Delay-Only) altimetry. It was used for the following papers: 
-http://dx.doi.org/10.13140/RG.2.2.32296.17925
 
-This package aims at unifiying the original WHALES code developed by M. Passaro with the altimeter simple simulations and retracking tools developed by F. Ardhuin for the analysis of wave group effects. 
+https://doi.org/10.1029/2023JC019740   Wave groups and small scale variability of wave heights observed by altimeters
+
+https://doi.org/10.1029/2023JC020832   Along-Track Resolution and Uncertainty of Altimeter-Derived Wave Height and Sea Level
 
 
 
+This package aims at unifiying the original WHALES code developed by M. Passaro with the altimeter simple simulations and retracking tools developed by F. Ardhuin for the analysis of wave group effects. The current status is that we have 3 flavours of the 
+retrackers, and we are slowly converging to only two, and maybe one:  
+1)- WHALES_withRangeAndEpoch.py           : this is the retracker code used for the ESA SeaState CCI project, look at python_WHALES_launcher.py for an example of how to use it. It works on NetCDF GDR data. 
+2)- altimetry_waveforms_functions.py      : this is a simplified and generalized retracker, designed to test many options (maximum likelihood vs least squares ...). Works with SWIM netCDF data or simulated spectra. See Figure2_retracking_CFOSAT.ipynb for an example. 
+3)- altimetry_waveforms_functions_new.py  : this one should soon replace the previous one. It allows range-dependent weights, as in the WHALES retracker. Works with SWIM netCDF data or simulated spectra. See Figure2_retracking_CFOSAT_WHALES.ipynb for an example. 
+
+
+Ongoing work: 
+- adapting 3) to SWOT Poseidon 3C data
+- updating all notebooks to get rid of 2) 
+- updating 1) to allow retracking of SWIM and SWOT data. 
+- comparing 1) and 3) on the same data to make sure all the steps of the WHALES algorithm are well undersood. (See Passaro, ATBD, also Passaro et al., in prep). 
 
 
 ## Installation 
 git clone --quiet https://github.com/ardhuin/wavesALTI
+
+## Running the WHALES retracker 
+Here is an example, using SARAL/AltiKa data, from the command line: it reads the file with waveforms specified by the -i option and dumps the retracked result as NetCDF files in the output directory specified by -o . 
+
+python python_WHALES_launcher.py -m saral -i /home/ardhuin/PUBLI/2023_groups/DATA/SRL_GPS_2PfP001_0641_20130405_141055_20130405_150113.CNES.nc  -o OUTPUT
+
+
+## Various notebooks 
+Figure2_retracking_CFOSAT.ipynb  : this generates the plots of Figure 2 in De Carlo & Ardhuin (2024) 

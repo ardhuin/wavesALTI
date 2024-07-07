@@ -90,7 +90,7 @@ def  wf_erf2D(incognita,data)  :
     fff = wf_erf2D_eval(xdata,incognita,noise,PTR=PTR)
 
     if costfun=='LS':
-       cy= (   ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
+       cy= ( weights[min_gate:max_gate] *  ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
     else:
        ratio = np.divide(ydata[min_gate:max_gate]+1.e-5,fff[min_gate:max_gate]+1.e-5) 
        cy= ( ratio - np.log(ratio)-1.).sum()
@@ -178,7 +178,7 @@ def  wf_erfla(incognita,data)  :
     fff = wf_erfla_eval(xdata,incognita,noise,PTR=PTR)
 
     if costfun=='LS':
-       cy= (   ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
+       cy= ( weights[min_gate:max_gate] *  ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
     else:
        ratio = np.divide(ydata[min_gate:max_gate]+1.e-5,fff[min_gate:max_gate]+1.e-5) 
        cy= ( ratio - np.log(ratio)-1.).sum()
@@ -255,7 +255,7 @@ def  wf_erf4D(incognita,data)  :
     fff = wf_erf4D_eval(xdata,incognita,noise,PTR=PTR)
 
     if costfun=='LS':
-       cy= (   ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum() #+100*(np.abs(incognita[4])-incognita[4])
+       cy= ( weights[min_gate:max_gate] *  ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum() #+100*(np.abs(incognita[4])-incognita[4])
     else:
        ratio = np.divide(ydata[min_gate:max_gate]+1.e-5,fff[min_gate:max_gate]+1.e-5) 
        cy= ( ratio - np.log(ratio)-1.).sum()  #+100*(np.abs(incognita[4])-incognita[4])
@@ -339,7 +339,52 @@ def  wf_brown(incognita,data)  :
     
 #       cy= (   weights *  ((ydata - fff) **2)).sum()
     if costfun=='LS':
-       cy= (   ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
+       cy= ( weights[min_gate:max_gate] *  ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
+#       print('weig:',weights[min_gate:max_gate])
+    else:
+       ratio = np.divide(ydata[min_gate:max_gate]+thr,fff[min_gate:max_gate]+thr) 
+       cy= ( ratio - np.log(ratio)).sum()
+    
+    return cy
+
+
+def  wf_broww(incognita,data)  :
+    """
+    returns the least-square distance between the waveform data[0] and the theoretical 
+    Brown-Hayne functional form, The unknown parameters in this version (17 Dec 2013) are Epoch, Sigma and Amplitude, where 
+    sigma=( sqrt( (incognita(2)/(2*0.3)) ^2+SigmaP^2) ) is the rising time of the leading edge
+    
+    For the explanation of the terms in the equation, please check "Coastal Altimetry" Book
+    
+    """
+    
+    ydata =data[0] #Waveform coefficients
+    Gamma =data[1]
+    Zeta  =data[2]
+    xdata =data[3]  #Epoch
+    c_xi  =data[4]  #Term related to the slope of the trailing edge
+    noise  =data[5]
+    min_gate=data[6]
+    max_gate=data[7]
+    weights=data[8]
+    costfun=data[9]
+    PTR = data[10]
+    thr=1E-5 
+             
+    ff0 = noise+( incognita[2]/2*np.exp((-4/Gamma)*(np.sin(Zeta))**2) \
+    * np.exp (-  c_xi*( (xdata-incognita[0])-c_xi*incognita[1]**2/2) ) \
+    *   (  1+scipy.special.erf( ((xdata-incognita[0])-c_xi*incognita[1]**2)/((np.sqrt(2)*incognita[1]))  ) ) \
+    )
+    if PTR[0] < 1:
+       fff =fftconvolve(ff0,PTR,mode='same')
+    else:
+       fff=ff0
+  
+    
+#       cy= (   weights *  ((ydata - fff) **2)).sum()
+    if costfun=='LS':
+       cy= (     ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
+#       print('weig:',weights[min_gate:max_gate])
     else:
        ratio = np.divide(ydata[min_gate:max_gate]+thr,fff[min_gate:max_gate]+thr) 
        cy= ( ratio - np.log(ratio)).sum()
@@ -411,7 +456,7 @@ def  wf_brola(incognita,data)  :
 
 
     if costfun=='LS':
-       cy= (   ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
+       cy= ( weights[min_gate:max_gate] * ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
     else:
        ratio = np.divide(ydata[min_gate:max_gate]+thr,fff[min_gate:max_gate]+thr) 
        cy= ( ratio - np.log(ratio)).sum()
@@ -483,7 +528,7 @@ def  wf_bro4D(incognita,data)  :
 
     
     if costfun=='LS':
-       cy= (   ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
+       cy= ( weights[min_gate:max_gate]*  ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
     else:
        ratio = np.divide(ydata[min_gate:max_gate]+1.e-5,fff[min_gate:max_gate]+1.e-5) 
        cy= ( ratio - np.log(ratio)).sum()
@@ -524,7 +569,7 @@ def wf_eval(ranges,inputpar,clight,wf_model,tau=2.5,nominal_tracking_gate=30,noi
 
 ############# A 2-parameter retracker using scipy.minimize , as in WHALES #################
 
-def retracking_NM(wfm,times,rtot,wf_fun,Gamma=1.,Zeta=0.,c_xi=0.,min_gate=0,max_gate=127,weights=1.,\
+def retracking_NM(wfm,times,rtot,wf_fun,Gamma=1.,Zeta=0.,c_xi=0.,min_gate=0,max_gate=127,weights=[1.],\
 noise=0.,tau=2.5,costfun='LS',nominal_tracking_time=64*2.5,method='Nelder-Mead',PTR=([1])):
 #    print('TEST 0:',nominal_tracking_time,2.5*rtot) 
     Pu=None
@@ -533,6 +578,8 @@ noise=0.,tau=2.5,costfun='LS',nominal_tracking_time=64*2.5,method='Nelder-Mead',
     if wf_fun =='wf_erf2D':
        incognita=np.array([nominal_tracking_time,2.5*rtot,1.,0,0]) # initial conditions: could use previous waveform ... 
     elif wf_fun =='wf_brown':
+      incognita=np.array([nominal_tracking_time,2.5*rtot,1.,0,0]) # initial conditions: could use previous waveform ... 
+    elif wf_fun =='wf_broww':
       incognita=np.array([nominal_tracking_time,2.5*rtot,1.,0,0]) # initial conditions: could use previous waveform ... 
     elif wf_fun =='wf_erf4D':
       incognita=np.array([nominal_tracking_time,2.5*rtot,1.,0,0]) # initial conditions: could use previous waveform ... 
@@ -552,6 +599,8 @@ noise=0.,tau=2.5,costfun='LS',nominal_tracking_time=64*2.5,method='Nelder-Mead',
        Sigma=x[1]
        epoch=x[0]
        if wf_fun =='wf_brown':
+          Pu=x[2]
+       if wf_fun =='wf_broww':
           Pu=x[2]
        if wf_fun =='wf_bro4D':
           Pu=x[2]
@@ -773,13 +822,15 @@ def generate_wvform_database(nHs,dr=None,ne=None,bandwidth=320*1e6,\
     return wfm, Hsm, edges,dr   
 
 ##################################
-def retrack_waveforms(waveforms,ranges,max_range_fit,clight,mispointing=0.,theta3dB=1., min_range_fit=0,\
+def retrack_waveforms_new(waveforms,ranges,max_range_fit,clight,mispointing=0.,theta3dB=1., min_range_fit=0,\
                       wfm_ref=None,Hsm_ref=None,ze_ref=None,\
-                      min_method='gridsearch',wf_model='erf2D',PTR_model='Gauss',PTR=([1.]),\
+                      min_method='gridsearch',wf_model='erf2D',PTR_model='Gauss',PTR=([1.]), weights = [1.],nWHALES=0,\
                       costfun='LS',alti_sat=519*1e3,Theta=1.,tau=2.5,nominal_tracking_gate=30,min_gate_rat=0,Earth_sphericity_coeff=1.):
     #############################
     # WARNING , for real data use: Earth_sphericity_coeff = (1+alti_sat/Ri)
     #  tau : duration of range gate in nsec 
+    # 
+    # When nWHALES == 1, performs a 2-pass retracking that is similar to WHALES but not exactly WHALES (no adujstment of indices ... )
     nxw,nyw,nr=np.shape(waveforms)
     
     print('size of waveforms array:',nxw,nyw,nr,'alti_sat:',alti_sat)
@@ -805,37 +856,58 @@ def retrack_waveforms(waveforms,ranges,max_range_fit,clight,mispointing=0.,theta
     if len(mispointing)<2:
        mispointing=mispointing+np.zeros((nxw,nyw))
     
-
+    if len(weights)==1:
+       weights=np.zeros(nr)+weights
+    wmemo=weights
     for ix in range(nxw):
         print('Retracking waveforms',ix,' out of ',nxw,' ------------ ')
         for iy in range(nyw):
-            wfm=waveforms[ix,iy,:]
-            min_gate2=min_range_fit
-            maxwfm=max(wfm)
-            inds=np.where(wfm < min_gate_rat*maxwfm)[0]
+          wfm=waveforms[ix,iy,:]
+          min_gate2=min_range_fit
+          maxwfm=max(wfm)
+          inds=np.where(wfm < min_gate_rat*maxwfm)[0]
+          ind1=0;ind2=0;
+          for ip in [0,nWHALES]:
+            m1=min_gate2;m2=max_range_fit;
+            weights = wmemo
+            # Second pass for WHALES: uses SWH from first pass to get weights. 
+            if ip==1:
+              #wf_theory=wf_eval(ranges,np.array((ze_r[ix,iy],Hs_r[ix,iy],1,0,0)),clight,wf_model,noise=0,alti_sat=alti_sat,\
+              wf_theory=wf_eval(ranges,np.array((ze_r[ix,iy],Hs_r[ix,iy],1,0,0)),clight,wf_model,noise=0,alti_sat=alti_sat,\
+                            PTR_model='True',PTR=[1],tau=tau,nominal_tracking_gate=nominal_tracking_gate,mispointing=0,theta3dB=theta3dB)
+              weights=np.squeeze(92/wf_theory)
+              ind1=np.where(wf_theory > 0.1*np.max(wf_theory))[0][0]-1
+              ind2=ind1+np.where((wf_theory[ind1+1:nr-1]-wf_theory[ind1:nr-2]) < 0.001)[0][0]+2
+              m1=max(min_gate2,ind1)
+              #m2=min(max_range_fit,ind2)
+              wmemo=weights
+              
             if len(inds) > 0:
-               min_gate2=max(np.argmax(inds),min_range_fit)
+               m1=max(np.argmax(inds),m1)
+            print('HEY:',np.shape(weights),m1,m2,ind1,ind2,min_range_fit,max_range_fit,Hs_r[ix,iy]) 
             b_xi = np.cos (2*mispointing[ix,iy]) - ((np.sin(2*mispointing[ix,iy]))**2)/Gamma
             c_xi=b_xi* ( (4/Gamma)*(clightn/alti_sat) * 1/Earth_sphericity_coeff)
             if min_method == 'gridsearch':
                Sigma,t0,di_r[ix,iy]=simple_retracking_process_2params(wfm,\
-                                  max_edg=max_range_fit,nHs=250,nze=251,wfm_ref=wfm_ref,Hsm_ref=Hsm_ref,ze_ref=ze_ref,costfun=costfun)
+                                  max_edg=m2,weights=weights,nHs=250,nze=251,wfm_ref=wfm_ref,Hsm_ref=Hsm_ref,ze_ref=ze_ref,costfun=costfun)
             elif min_method in [ 'Nelder-Mead','Newton-CG']:
                Sigma,t0,Pu_r[ix,iy],da_r[ix,iy],R0_r[ix,iy],di_r[ix,iy]=retracking_NM(wfm, times,rtot,wf_model,
-                                        min_gate=min_gate2,max_gate=max_range_fit,noise=noise,tau=tau, Gamma=Gamma,Zeta=mispointing[ix,iy], \
+                                        min_gate=m1,max_gate=m2,weights=weights,noise=noise,tau=tau, Gamma=Gamma,Zeta=mispointing[ix,iy], \
                                         c_xi=c_xi,nominal_tracking_time=timeshift,method=min_method,costfun=costfun,PTR=PTR)
             elif min_method == 'pyramid2':
                Sigma,t0,di_r[ix,iy],                                  =retracking_pyramid2(wfm,times,rtot,wf_model,\
-                 min_gate=min_gate2,max_gate=max_range_fit,noise=noise,tau=tau,Gamma=Gamma,Zeta=mispointing[ix,iy],\
+                min_gate=m1,max_gate=m2,weights=weights,noise=noise,tau=tau,Gamma=Gamma,Zeta=mispointing[ix,iy],\
                                                     c_xi=c_xi,nominal_tracking_time=timeshift,costfun=costfun,PTR=PTR)
             elif min_method == 'pyramid3':
                Sigma,t0,Pu_r[ix,iy],da_r[ix,iy],R0_r[ix,iy],di_r[ix,iy]=retracking_pyramid3(wfm,times,rtot,wf_model,\
-                 min_gate=min_gate2,max_gate=max_range_fit,noise=noise,tau=tau,Gamma=Gamma,Zeta=mispointing[ix,iy],\
+                 min_gate=m1,max_gate=m2,weights=weights,noise=noise,tau=tau,Gamma=Gamma,Zeta=mispointing[ix,iy],\
                                                     c_xi=c_xi,nominal_tracking_time=timeshift,costfun=costfun,PTR=PTR)
             elif min_method == 'pyramid4':
                Sigma,t0,Pu_r[ix,iy],da_r[ix,iy],R0_r[ix,iy],di_r[ix,iy]=retracking_pyramid4(wfm,times,rtot,wf_model,\
-                 min_gate=min_gate2,max_gate=max_range_fit, noise=noise,tau=tau,Gamma=Gamma,Zeta=mispointing[ix,iy],\
+                 min_gate=m1,max_gate=m2,weights=weights, noise=noise,tau=tau,Gamma=Gamma,Zeta=mispointing[ix,iy],\
                                                     c_xi=c_xi,nominal_tracking_time=timeshift,costfun=costfun,PTR=PTR)
+
+
             if PTR_model == 'Gauss':              
                #print('TEST1:',Sigma*4/rtot,np.sqrt(Sigma**2- SigmaP**2)*4/rtot)
                if Sigma >= 0:
