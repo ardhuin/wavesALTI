@@ -51,3 +51,6 @@ Figure5_perturbed_waveforms.ipynb   : generates Figure 5 of De Carlo & Ardhuin (
 Figure6_J_functions.ipynb 
 and 
 Figure6_J_WHALES.ipynb              : generates  Figure 6 f De Carlo & Ardhuin (2024), showing J filter functions. 
+
+Figure7_2D_maps_of_retracked_parameters.ipynb  : this generates a surface from a 2D wave spectrum (this example uses a SWIM -derived spectrum) and performs retracking of waveforms generated from the surface, as in Figure 7 of De Carlo & Ardhuin (2024). And does many other things (cross-spectral analysis of SWH and local wave heights ... ) 
+
