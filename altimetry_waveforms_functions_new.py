@@ -884,7 +884,6 @@ def retrack_waveforms_new(waveforms,ranges,max_range_fit,clight,mispointing=0.,t
               
             if len(inds) > 0:
                m1=max(np.argmax(inds),m1)
-            print('HEY:',np.shape(weights),m1,m2,ind1,ind2,min_range_fit,max_range_fit,Hs_r[ix,iy]) 
             b_xi = np.cos (2*mispointing[ix,iy]) - ((np.sin(2*mispointing[ix,iy]))**2)/Gamma
             c_xi=b_xi* ( (4/Gamma)*(clightn/alti_sat) * 1/Earth_sphericity_coeff)
             if min_method == 'gridsearch':
