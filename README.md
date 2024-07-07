@@ -18,8 +18,11 @@ https://doi.org/10.1029/2023JC020832   Along-Track Resolution and Uncertainty of
 
 This package aims at unifiying the original WHALES code developed by M. Passaro with the altimeter simple simulations and retracking tools developed by F. Ardhuin for the analysis of wave group effects. The current status is that we have 3 flavours of the 
 retrackers, and we are slowly converging to only two, and maybe one:  
+
 1)- WHALES_withRangeAndEpoch.py           : this is the retracker code used for the ESA SeaState CCI project, look at python_WHALES_launcher.py for an example of how to use it. It works on NetCDF GDR data. 
+
 2)- altimetry_waveforms_functions.py      : this is a simplified and generalized retracker, designed to test many options (maximum likelihood vs least squares ...). Works with SWIM netCDF data or simulated spectra. See Figure2_retracking_CFOSAT.ipynb for an example. 
+
 3)- altimetry_waveforms_functions_new.py  : this one should soon replace the previous one. It allows range-dependent weights, as in the WHALES retracker. Works with SWIM netCDF data or simulated spectra. See Figure2_retracking_CFOSAT_WHALES.ipynb for an example. 
 
 
