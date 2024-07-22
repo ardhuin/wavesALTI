@@ -6,16 +6,22 @@ Created on 11 February 2019
 
 WHALES Retracker corresponding to the WHALES version of the 4.12.2018, but with Epoch and Range in Output
 
+The WHALES algorithm is described in 
+Passaro, M., & Algorithm Development Team. (2021). Algorithm theoretical basis document (atbd), 
+sea state climate change initiative (Tech. Rep.). European Space Agency. 
+Retrieved from https://climate.esa.int/media/documents/Sea_State_cci_ATBD_v3.0-signed.pdf
+
 Modification history:
 	2023-01-10: corrections for SARAL by Marine De Carlo 
         2024-06-30: adaptation for wavesALTI package by F. Ardhuin 
+        2024-07-19: added possibility to use 1/waveform for the weights
 
 
 """
 
 
 from Retracker_MP    import *
-from waveform_models import waveform_brown_LS,waveform_brown_ML
+from waveform_models import waveform_brown_LS,waveform_brown_ML,wf_brown_eval
 import scipy
 from scipy import stats
 import cmath #handling of complex square root
@@ -121,7 +127,7 @@ class WHALES_withRangeAndEpoch(Retracker_MP):
         if mission.lower() == 'saral' or mission.lower() == 'saral_igdr':
             tau=3.125*320/480 #gate spacing in ns
             nominal_tracking_gate=51            
-        if mission.lower() == 'jason2' or mission.lower() == 'jason1' or mission.lower() == 'jason3': 
+        if mission.lower() == 'jason2' or mission.lower() == 'jason1' or mission.lower() == 'jason3' or mission.lower() == 'swot': 
             tau=3.125
             nominal_tracking_gate=31
         if mission.lower() == 'ers2_r' or mission.lower() == 'ers2_r_2cm': 
@@ -239,8 +245,6 @@ class WHALES_withRangeAndEpoch(Retracker_MP):
 
         mission = self.mission
         waveform = np.array(self.waveform)
-        
-            
         # IN THE FOLLOWING LINES; THE SPECIFIC CHARACTERISTICS OF EACH MISSIONS ARE DEFINED
         # NOTE THAT:
         # Waveforms are not oversampled, because Jason has been tested with the addition of 
@@ -271,7 +275,7 @@ class WHALES_withRangeAndEpoch(Retracker_MP):
                                                         #to retrack the same waveform in a different way if fitting performances are not satisfactory              
 
    
-        elif mission.lower() == 'jason2' or mission.lower() == 'jason1' or mission.lower() == 'jason3': 
+        elif mission.lower() == 'jason2' or mission.lower() == 'jason1' or mission.lower() == 'jason3' or mission.lower() == 'swot': 
                 index_originalbins=np.arange(0,103,1) #Gate index of the waveform samples
                 total_gate_number=104                
                 noisegates=np.arange(0,6); #gates used to estimate Thermal Noise
@@ -419,7 +423,7 @@ class WHALES_withRangeAndEpoch(Retracker_MP):
                 x1_yang, Wt_yang, exitflag_yang, Err, SWH =\
                         self.NM_fit( xdata[startgate:gate2+growingdue+1] , D[startgate:gate2+growingdue+1],\
                         self.xi*math.pi/180,self.tau,self.Theta,self.SigmaP,self.hsat,\
-                        np.array([x_initial, sigma_initial, ampl_initial]),mission,this_weights[startgate:gate2+growingdue+1],weightflag,modelcost='brown_ML')
+                        np.array([x_initial, sigma_initial, ampl_initial]),mission,this_weights[startgate:gate2+growingdue+1],weightflag,modelcost='brown_LS')
 
 
                 if gate2>gate1+1 and gate1>0 and np.size(Wt_yang)>1 and gate1>startgate and gate2>startgate+1 :
@@ -521,11 +525,37 @@ class WHALES_withRangeAndEpoch(Retracker_MP):
                             #In WHALES, for each value of SWH there is a corresponding set of weights, which are defined only from the start to the end of the 
                             #leading edge of the synthetic waveforms generated in the Montecarlo simulation
                             
-                            #In the following lines,the closest value of SWH is searched in the table, considering the exit of the first pass
                             weigths_SWH_vector=np.arange(0,10.5,0.5)
                             select_weights=np.argmin(  np.abs(np.abs(SWH_yang)-weigths_SWH_vector)  )
-                                #Select the right line of weights
-                            weights_select=self.weights[select_weights,:]
+                                 
+                            if self.weights_type == 0:
+                                 weights_select=np.zeros(len(waveform))+1.0
+                            elif self.weights_type == 1:
+                            #In the following lines,the closest value of SWH is searched in the table, considering the exit of the first pass
+                                     #Select the right line of weights
+                                 weights_select=self.weights[select_weights,:]
+
+                            elif self.weights_type == 2:
+                                 weights_select=np.zeros(len(waveform))+1.0
+                                 Gamma=0.5 * (1/math.log(2))*np.sin(self.Theta)*np.sin(self.Theta) # antenna beamwidth parameter
+                                 c=3.0*(10**8) #Light speed
+                                 H=self.hsat
+                                 Ri=6378.1363*(10**3) #Earth radius
+
+                                 Gamma=0.5 * (1/math.log(2))*np.sin(self.Theta)*np.sin(self.Theta) # antenna beamwidth parameter
+                                 Zeta=self.xi*math.pi/180
+                                 b_xi = np.cos (2*Zeta) - ((np.sin(2*Zeta))**2)/Gamma
+                                 a=( (4/Gamma)*(c/H) * 1/(1+H/Ri))
+                                 c_xi=b_xi* ( (4/Gamma)*(c/H) * 1/(1+H/Ri))
+                                 c_xi=c_xi/1000000000 #1/ns
+                                 #print('MYWF',H,x1_yang,'##',xdata[0:2],Gamma,Zeta,c_xi)
+                                 weights_select=0.001+wf_brown_eval(xdata,x1_yang,0.,Gamma,Zeta,c_xi,[1]) # tau,PTR)
+                                 #A=x1_yang[2]/2*np.exp((-4/Gamma)*(np.sin(self.xi*math.pi/180))**2)
+                                 #weights_select[startgate:gate2+growingdue+1]=Wt_yang/A
+                                 #weights_select[0:startgate]=weights_select[startgate]
+                                 #weights_select[0:startgate]=weights_select[gate2+growingdue]
+                            
+                            #print('COUCOU',np.shape(weights_select),SWH ,np.min(weights_select),np.max(weights_select))   
                             index_nanweights=np.where(np.isnan(weights_select))[0]
                             weights_select[index_nanweights]=1 #Transform the NaNs of the weight vector in ones
                             index_startweight=np.where(self.weights_flag[select_weights,:]==1)[0] #identify the start and the end of the leading edge in the weight vector
