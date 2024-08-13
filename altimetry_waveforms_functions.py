@@ -304,6 +304,7 @@ def  wf_brown_eval(xdata,incognita,noise,Gamma,Zeta,c_xi,tau,PTR)  :
 
     return fff
 
+
 def  wf_brown(incognita,data)  :
     """
     returns the least-square distance between the waveform data[0] and the theoretical 
@@ -346,6 +347,151 @@ def  wf_brown(incognita,data)  :
     
     return cy
 
+
+######################  Defines waveform theoretical models: brown from WHALES code 
+def  wf_bro1_eval(xdata,incognita,noise,Gamma,Zeta,c_xi,tau,PTR)  :
+    '''
+    Define a waveform as in the WHALES code.
+    Based on a Brown model.
+    inputs :
+            - xdata : range gates
+            - incognita : (3,) vector with [0] = epoch, [1] = Hs, [2] = amplitude
+            - noise : thermal noise
+            - Gamma : coeff with antenna bandwidth (gamma in Tourain et al. 2020)
+            - Zeta : off nadir pointing angle (= mispointing)
+            - c_xi : 4 c /(G * h) (with G = Gamma in Tourain et al. 2020)
+            - tau : not used (sampling period such as SigmaP=0.513*tau related to PTR width)
+            - PTR : optionnal PTR
+    output : - waveform
+    '''
+
+    t0=3.125*30
+    ff0=noise+( 1.0/2*np.exp((-4/Gamma)*(np.sin(Zeta))**2) \
+    * np.exp (-  c_xi*( (xdata-t0)-c_xi*incognita[0]**2/2) ) \
+    *   (  1+scipy.special.erf( ((xdata-t0)-c_xi*incognita[0]**2)/((np.sqrt(2)*incognita[0]))  ) ) \
+    )
+    if PTR[0] < 1:
+       fff =fftconvolve(ff0,PTR,mode='same')
+    else:
+       fff=ff0
+
+    return fff
+    
+def  wf_bro1(incognita,data)  :
+    """
+    returns the least-square distance between the waveform data[0] and the theoretical 
+    Brown-Hayne functional form, The unknown parameters in this version (17 Dec 2013) are Epoch, Sigma and Amplitude, where 
+    sigma=( sqrt( (incognita(2)/(2*0.3)) ^2+SigmaP^2) ) is the rising time of the leading edge
+    
+    For the explanation of the terms in the equation, please check "Coastal Altimetry" Book
+    
+    """
+    
+    ydata =data[0] #Waveform coefficients
+    Gamma =data[1]
+    Zeta  =data[2]
+    xdata =data[3]  #Epoch
+    c_xi  =data[4]  #Term related to the slope of the trailing edge
+    noise  =data[5]
+    min_gate=data[6]
+    max_gate=data[7]
+    weights=data[8]
+    costfun=data[9]
+    PTR = data[10]
+    thr=1E-5 
+    t0=3.125*30
+             
+    ff0 = noise+( 1.0/2*np.exp((-4/Gamma)*(np.sin(Zeta))**2) \
+    * np.exp (-  c_xi*( (xdata-t0)-c_xi*incognita[0]**2/2) ) \
+    *   (  1+scipy.special.erf( ((xdata-t0)-c_xi*incognita[0]**2)/((np.sqrt(2)*incognita[0]))  ) ) \
+    )
+    if PTR[0] < 1:
+       fff =fftconvolve(ff0,PTR,mode='same')
+    else:
+       fff=ff0
+  
+    
+#       cy= (   weights *  ((ydata - fff) **2)).sum()
+    if costfun=='LS':
+       cy= (   ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
+    else:
+       ratio = np.divide(ydata[min_gate:max_gate]+thr,fff[min_gate:max_gate]+thr) 
+       cy= ( ratio - np.log(ratio)).sum()
+    
+    return cy
+
+######################  Defines waveform theoretical models: brown from WHALES code 
+def  wf_bro2_eval(xdata,incognita,noise,Gamma,Zeta,c_xi,tau,PTR)  :
+    '''
+    Define a waveform as in the WHALES code.
+    Based on a Brown model.
+    inputs :
+            - xdata : range gates
+            - incognita : (3,) vector with [0] = epoch, [1] = Hs, [2] = amplitude
+            - noise : thermal noise
+            - Gamma : coeff with antenna bandwidth (gamma in Tourain et al. 2020)
+            - Zeta : off nadir pointing angle (= mispointing)
+            - c_xi : 4 c /(G * h) (with G = Gamma in Tourain et al. 2020)
+            - tau : not used (sampling period such as SigmaP=0.513*tau related to PTR width)
+            - PTR : optionnal PTR
+    output : - waveform
+    '''
+
+    t0=3.125*30
+
+    ff0=noise+( incognita[1]/2*np.exp((-4/Gamma)*(np.sin(Zeta))**2) \
+    * np.exp (-  c_xi*( (xdata-t0)-c_xi*incognita[0]**2/2) ) \
+    *   (  1+scipy.special.erf( ((xdata-t0)-c_xi*incognita[0]**2)/((np.sqrt(2)*incognita[0]))  ) ) \
+    )
+    if PTR[0] < 1:
+       fff =fftconvolve(ff0,PTR,mode='same')
+    else:
+       fff=ff0
+
+    return fff
+    
+def  wf_bro2(incognita,data)  :
+    """
+    returns the least-square distance between the waveform data[0] and the theoretical 
+    Brown-Hayne functional form, The unknown parameters in this version (17 Dec 2013) are Epoch, Sigma and Amplitude, where 
+    sigma=( sqrt( (incognita(2)/(2*0.3)) ^2+SigmaP^2) ) is the rising time of the leading edge
+    
+    For the explanation of the terms in the equation, please check "Coastal Altimetry" Book
+    
+    """
+    
+    ydata =data[0] #Waveform coefficients
+    Gamma =data[1]
+    Zeta  =data[2]
+    xdata =data[3]  #Epoch
+    c_xi  =data[4]  #Term related to the slope of the trailing edge
+    noise  =data[5]
+    min_gate=data[6]
+    max_gate=data[7]
+    weights=data[8]
+    costfun=data[9]
+    PTR = data[10]
+    thr=1E-5 
+    t0=3.125*30
+             
+    ff0 = noise+( incognita[1]/2*np.exp((-4/Gamma)*(np.sin(Zeta))**2) \
+    * np.exp (-  c_xi*( (xdata-t0)-c_xi*incognita[0]**2/2) ) \
+    *   (  1+scipy.special.erf( ((xdata-t0)-c_xi*incognita[0]**2)/((np.sqrt(2)*incognita[0]))  ) ) \
+    )
+    if PTR[0] < 1:
+       fff =fftconvolve(ff0,PTR,mode='same')
+    else:
+       fff=ff0
+  
+    
+#       cy= (   weights *  ((ydata - fff) **2)).sum()
+    if costfun=='LS':
+       cy= (   ((ydata[min_gate:max_gate] - fff[min_gate:max_gate]) **2)).sum()
+    else:
+       ratio = np.divide(ydata[min_gate:max_gate]+thr,fff[min_gate:max_gate]+thr) 
+       cy= ( ratio - np.log(ratio)).sum()
+    
+    return cy
 ######################  Defines waveform theoretical models: brown from WHALES code 
 def  wf_brola_eval(xdata,incognita,noise,Gamma=0,Zeta=0,c_xi=0,tau=0,PTR=0)  :
     '''
@@ -532,6 +678,10 @@ noise=0.,tau=2.5,costfun='LS',nominal_tracking_time=64*2.5,method='Nelder-Mead',
     R0=None 
     if wf_fun =='wf_erf2D':
        incognita=np.array([nominal_tracking_time,2.5*rtot,1.,0,0]) # initial conditions: could use previous waveform ... 
+    elif wf_fun =='wf_bro1':
+      incognita=np.array([2.5*rtot]) # initial conditions: could use previous waveform ... 
+    elif wf_fun =='wf_bro2':
+      incognita=np.array([2.5*rtot,1.]) # initial conditions: could use previous waveform ... 
     elif wf_fun =='wf_brown':
       incognita=np.array([nominal_tracking_time,2.5*rtot,1.,0,0]) # initial conditions: could use previous waveform ... 
     elif wf_fun =='wf_erf4D':
@@ -549,20 +699,35 @@ noise=0.,tau=2.5,costfun='LS',nominal_tracking_time=64*2.5,method='Nelder-Mead',
 # bounds=((-4*rtot,4*rtot),(0.0,2.5*rtot)),
     x=xopt.x
     if xopt.success == True:
-       Sigma=x[1]
-       epoch=x[0]
+       if wf_fun =='wf_bro1':
+          Sigma=x[0]
+          epoch=0.
+       if wf_fun =='wf_bro2':
+          Sigma=x[0]
+          epoch=3.125*30
+          Pu=x[1]
        if wf_fun =='wf_brown':
+          Sigma=x[1]
+          epoch=x[0]
           Pu=x[2]
        if wf_fun =='wf_bro4D':
+          Sigma=x[1]
+          epoch=x[0]
           Pu=x[2]
           da=x[3]
           R0=x[4]
        if wf_fun =='wf_erf4D':
+          Sigma=x[1]
+          epoch=x[0]
           da=x[3]
           R0=x[4]
        if wf_fun =='wf_erfla':
+          Sigma=x[1]
+          epoch=x[0]
           da=x[3]
        if wf_fun =='wf_brola':
+          Sigma=x[1]
+          epoch=x[0]
           Pu=x[2]
           da=x[3]
        dist=eval(wf_fun)(x,((wfm),Gamma,Zeta,(times),c_xi,noise,min_gate,max_gate,weights,costfun,PTR))
