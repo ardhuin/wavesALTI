@@ -555,22 +555,28 @@ class WHALES_withRangeAndEpoch(Retracker_MP):
                                  #weights_select[0:startgate]=weights_select[startgate]
                                  #weights_select[0:startgate]=weights_select[gate2+growingdue]
                             
-                            #print('COUCOU',np.shape(weights_select),SWH ,np.min(weights_select),np.max(weights_select))   
                             index_nanweights=np.where(np.isnan(weights_select))[0]
                             weights_select[index_nanweights]=1 #Transform the NaNs of the weight vector in ones
                             index_startweight=np.where(self.weights_flag[select_weights,:]==1)[0] #identify the start and the end of the leading edge in the weight vector
                             index_endweight=np.where(self.weights_flag[select_weights,:]==2)[0]
                             index_startweight=index_startweight[0] #convert array to index
-                            index_endweight=index_endweight[0] #convert array to index
+                            index_endweight=index_endweight[0]+40  #convert array to index
                             
                                 #Now prepare a weight vector considering the start of the leading edge in this waveform
                             this_weights=np.ones(np.shape(xdata))
                             if gate1+index_endweight-index_startweight<total_gate_number :
                                 this_weights[gate1:gate1+(index_endweight-index_startweight)]=weights_select[index_startweight:index_endweight]
-                                this_weights=1./this_weights
+                                this_weights=1./this_weights  #**2
                             
                             # Launche the second retracking process
-                            x1_LESfive, Wt_LESfive, exitflag_LESfive, Err, SWH =self.NM_fit( xdata[startgate:stopgate+growingdue+1] , D[startgate:stopgate+growingdue+1],self.xi*math.pi/180,self.tau,self.Theta,self.SigmaP,self.hsat,np.array([x_initial, sigma_initial, ampl_initial]),mission,this_weights[startgate:stopgate+growingdue+1],weightflag,modelcost='brown_LS')
+                            if self.costfunction == 'LS':
+                                x1_LESfive, Wt_LESfive, exitflag_LESfive, Err, SWH =self.NM_fit( xdata[startgate:stopgate+growingdue+1] , \
+                                D[startgate:stopgate+growingdue+1],self.xi*math.pi/180,self.tau,self.Theta,self.SigmaP,self.hsat,np.array([x_initial, sigma_initial, \
+                                ampl_initial]),mission,this_weights[startgate:stopgate+growingdue+1],weightflag,modelcost='brown_LS')
+                            else:
+                                x1_LESfive, Wt_LESfive, exitflag_LESfive, Err, SWH =self.NM_fit( xdata[startgate:stopgate+growingdue+1] , \
+                                D[startgate:stopgate+growingdue+1],self.xi*math.pi/180,self.tau,self.Theta,self.SigmaP,self.hsat,np.array([x_initial, sigma_initial, \
+                                ampl_initial]),mission,this_weights[startgate:stopgate+growingdue+1],weightflag,modelcost='brown_ML')
                             
                                      
                             self.Wt_all_LESfive[startgate:stopgate+growingdue+1]=Wt_LESfive  #This is the fitted subwaveform
@@ -594,7 +600,8 @@ class WHALES_withRangeAndEpoch(Retracker_MP):
                                 
                                 
                                 
-                                 
+                    #print('gates:',SWH,gate1,gate1+(index_endweight-index_startweight),startgate,stopgate+growingdue+1,np.max( D[startgate:stopgate+growingdue+1])   )
+                                         
                             #END OF THE SECOND WHILE CYCLE
 
             stopgate=stopgate-1  #This is not used anymore

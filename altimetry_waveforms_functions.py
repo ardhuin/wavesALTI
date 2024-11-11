@@ -699,6 +699,8 @@ noise=0.,tau=2.5,costfun='LS',nominal_tracking_time=64*2.5,method='Nelder-Mead',
 # bounds=((-4*rtot,4*rtot),(0.0,2.5*rtot)),
     x=xopt.x
     if xopt.success == True:
+       Sigma=x[1]
+       epoch=x[0]
        if wf_fun =='wf_bro1':
           Sigma=x[0]
           epoch=0.

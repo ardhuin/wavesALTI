@@ -10,9 +10,9 @@ Works for the following missions: Jason, Jason-2, Jason-3, SARAL, Cryosat 2 (LRM
 
 Examples of use from command line: 
 python python_WHALES_launcher.py -m jason3f -i JA3_GPS_2PfP342_001_20230609_173418_20230609_183031.nc -o WHALES
-python python_WHALES_launcher.py -m swot -i SWOT_GPS_2PfP549_004_20230611_125241_20230611_134346.nc -w 2 -o WHALES2 
+python python_WHALES_launcher.py -m swot -w 2 -o WHALES2  -i SWOT_GPS_2PfP549_004_20230611_125241_20230611_134346.nc 
 python python_WHALES_launcher.py -m saral -i SRL_GPS_2PfP001_0641_20130405_141055_20130405_150113.CNES.nc -o WHALES_SARAL
-
+python python_WHALES_launcher.py -m swot -w 2 -o SWOT -i SWOT_GPS_2PfP012_567_20240326_230842_20240327_000009.nc
         2024-07-19: added possibility to use 1/waveform for the weights (FA)
 """
 import argparse
@@ -62,6 +62,10 @@ def get_options():
         '-w', '--weights', type=int, default=1,
         help='weights to be used for retracking: 0=constant, 1=input file, 2=1/brown'
     )
+    parser.add_argument(
+        '-c', '--costfunction', type=str, default='LS',
+        help='cost function for retracking: LS=least squares, ML=maximum likelihood'
+    )
     return parser.parse_args()
 
 
@@ -69,7 +73,9 @@ options = get_options()
 filename = options.input
 mission = options.mission
 weights_type = options.weights
+costfunction = options.costfunction
 print('weight type:',weights_type)
+print('constfunction:',costfunction)
 saving_directory = options.output
 
 saving_name = os.path.join(saving_directory, os.path.basename(filename))
@@ -455,6 +461,7 @@ for index_waveforms_row in np.arange(0, np.shape(S_time)[0], 1):
         #    input['mission'] = 'jason3'
         input['mission'] = mission
         input['weights_type']  = weights_type
+        input['costfunction']  = costfunction
 
         ' off nadir angle in degree '
         input['xi'] = S_offnadir[index_waveforms_row, index_waveforms_col]
