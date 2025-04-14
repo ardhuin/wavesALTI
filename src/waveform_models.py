@@ -2,7 +2,7 @@
 """
 Created on Mon May 29 2023
 
-@author: ardhuin
+@author: M. Passaro & F. ardhuin
 """
 
 """waveform_models.py: A Python module for LRM waveform models
@@ -51,7 +51,7 @@ def  waveform_brown_LS(incognita,data)  :
      For the explanation of the terms in the equation, please check "Coastal Altimetry" Book
      
      """
-                                 
+     
      ydata =data[0] #Waveform coefficients
      Gamma =data[1]
      Zeta  =data[2]
@@ -60,8 +60,6 @@ def  waveform_brown_LS(incognita,data)  :
      c_xi  =data[5]  #Term related to the slope of the trailing edge
      weights=data[6]  #Weights to apply to the residuals
          
-     #print('YOWF',incognita,'##',xdata[0:2],Gamma,Zeta,c_xi)
-
      fff = ( incognita[2]/2*np.exp((-4/Gamma)*(np.sin(Zeta))**2) \
      * np.exp (-  c_xi*( (xdata-incognita[0])-c_xi*incognita[1]**2/2) ) \
      *   (  1+scipy.special.erf( ((xdata-incognita[0])-c_xi*incognita[1]**2)/((np.sqrt(2)*incognita[1]))  ) ) \

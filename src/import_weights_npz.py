@@ -54,23 +54,10 @@ def import_weights_npz(pickle_file_path):
         print(f"An unexpected error occurred: {e}")
     return None, None, None
 
-
- 
-
-#def import_weights_npz(my_path_weights)     :
-#    data = np.load(my_path_weights,allow_pickle=True)
-#    for k in data.keys():
-#        print(k+' = data["'+k+'"]')
-#        exec(k+' = data["'+k+'"]')
-#        exec('print("cou:","'+k+'",len('+k+'))')
-#    print('coucou:',len(data))
-#    print('coucou:',len(residual_std),len(data))
-#    return residual_std, flag_edges
     
 
 def import_weights_mat(my_path_weights)     :
     import h5py  
-    print('COUCOU:',my_path_weights)
     mat_weights = h5py.File(my_path_weights,'r')
     residual_std=np.transpose(mat_weights['residual_tot']) 
     flag_edges=np.transpose(mat_weights['flag_edges'])
